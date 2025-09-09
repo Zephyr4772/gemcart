@@ -295,6 +295,8 @@ $product_count = mysqli_num_rows($result);
                                         }
                                     }
                                 }
+                                // Set image_name for the addToCart function
+                                $image_name = basename($product['image']);
                             } else {
                                 // No image in database, try to find one based on product name
                                 $category_folder = strtolower($product['category_name']);
@@ -316,9 +318,11 @@ $product_count = mysqli_num_rows($result);
                                     $category_images = glob('assets/' . $category_folder . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
                                     if (!empty($category_images)) {
                                         $imgSrc = $category_images[0];
+                                        $image_name = basename($category_images[0]);
                                     } else {
                                         // Fallback to placeholder
                                         $imgSrc = 'https://via.placeholder.com/300x220?text=' . urlencode($product['name']);
+                                        $image_name = '';
                                     }
                                 }
                             }
