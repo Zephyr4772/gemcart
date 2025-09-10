@@ -22,7 +22,7 @@
 - [x] Cart items are saved to database
 - [x] User authentication with database
 - [x] Database structure is correct with proper foreign key relationships
-- [x] All database tables (users, products, cart, orders, order_items) are properly defined
+- [x] All database tables (users, products, cart, orders, placed_orders) are properly defined
 - [x] Database table inconsistency fixed (previously 'user_cart' now correctly 'cart')
 
 ### Order Processing
@@ -59,7 +59,7 @@
 - [x] **products** table with proper fields (id, name, description, price, image, category_id, created_at)
 - [x] **cart** table with proper fields (id, user_id, product_id, quantity, added_at)
 - [x] **orders** table with proper fields (id, user_id, total_amount, payment_method, delivery_address, order_date)
-- [x] **order_items** table with proper fields (id, order_id, product_id, quantity, price)
+- [x] **placed_orders** table with proper fields (id, order_id, product_id, quantity, price)
 - [x] **categories** table with proper fields (id, name)
 - [x] **admins** table with proper fields (id, username, password, created_at)
 - [x] **feedback** table with proper fields (id, user_id, name, email, message, date_submitted, issue_type)
@@ -67,7 +67,7 @@
 ### Database Relationships
 - [x] Foreign key constraints properly defined
 - [x] Cascade delete for cart items when user is deleted
-- [x] Proper relationships between orders, order_items, and products
+- [x] Proper relationships between orders, placed_orders, and products
 - [x] Proper relationships between cart, users, and products
 
 ### Database Access

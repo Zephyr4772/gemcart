@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 28, 2025 at 07:31 PM
+-- Generation Time: Sep 10, 2025 at 07:27 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -54,6 +54,17 @@ CREATE TABLE `cart` (
   `quantity` int(11) NOT NULL DEFAULT 1,
   `added_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cart`
+--
+
+INSERT INTO `cart` (`id`, `user_id`, `product_id`, `quantity`, `added_at`) VALUES
+(21, 10, 27, 1, '2025-09-07 13:51:10'),
+(22, 10, 26, 1, '2025-09-07 13:51:11'),
+(23, 10, 25, 1, '2025-09-07 13:51:12'),
+(24, 10, 22, 1, '2025-09-07 13:51:13'),
+(30, 1, 1, 1, '2025-09-09 22:02:43');
 
 -- --------------------------------------------------------
 
@@ -147,7 +158,14 @@ CREATE TABLE `orders` (
 
 INSERT INTO `orders` (`id`, `user_id`, `total_amount`, `payment_method`, `delivery_address`, `order_date`) VALUES
 (1, 1, 3599.98, 'cash', '123 Main St, Cityville', '2025-07-13 05:46:08'),
-(2, 2, 1299.99, 'cashless', '456 Oak Ave, Townsville', '2025-07-13 05:46:08');
+(2, 2, 1299.99, 'cashless', '456 Oak Ave, Townsville', '2025-07-13 05:46:08'),
+(3, 9, 12149.91, 'cash', 'sefweewfs', '2025-09-06 23:24:59'),
+(4, 9, 3799.98, 'cashless', 'give meeeeeeeeeeeeeeeeeeee', '2025-09-06 23:28:12'),
+(5, 9, 1999.99, 'cashless', 'nathi jotu tu rakh loda', '2025-09-06 23:31:38'),
+(6, 9, 3799.98, '', 'tari ghare avi ne mari lais pappi', '2025-09-06 23:39:02'),
+(7, 9, 6299.96, '', 'vishal ni gaand ma kabo ghusi gyu', '2025-09-06 23:45:49'),
+(8, 9, 3199.98, '', 'om bhram svaha', '2025-09-06 23:48:58'),
+(9, 11, 7349.94, '', 'ftfthfh', '2025-09-09 22:03:44');
 
 -- --------------------------------------------------------
 
@@ -170,7 +188,28 @@ CREATE TABLE `placed_orders` (
 INSERT INTO `placed_orders` (`id`, `order_id`, `product_id`, `quantity`, `price`) VALUES
 (1, 1, 1, 1, 2999.99),
 (2, 1, 3, 1, 599.99),
-(3, 2, 5, 1, 1299.99);
+(3, 2, 5, 1, 1299.99),
+(4, 3, 27, 2, 1999.99),
+(5, 3, 26, 3, 1799.99),
+(6, 3, 22, 1, 349.99),
+(7, 3, 10, 3, 799.99),
+(8, 4, 27, 1, 1999.99),
+(9, 4, 26, 1, 1799.99),
+(10, 5, 27, 1, 1999.99),
+(11, 6, 27, 1, 1999.99),
+(12, 6, 26, 1, 1799.99),
+(13, 7, 27, 1, 1999.99),
+(14, 7, 26, 1, 1799.99),
+(15, 7, 25, 1, 1199.99),
+(16, 7, 24, 1, 1299.99),
+(17, 8, 27, 1, 1999.99),
+(18, 8, 25, 1, 1199.99),
+(19, 9, 24, 1, 1299.99),
+(20, 9, 8, 1, 299.99),
+(21, 9, 7, 1, 2499.99),
+(22, 9, 27, 1, 1999.99),
+(23, 9, 22, 1, 349.99),
+(24, 9, 17, 1, 899.99);
 
 -- --------------------------------------------------------
 
@@ -193,30 +232,30 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `description`, `price`, `image`, `category_id`, `created_at`) VALUES
-(1, 'Diamond Engagement Ring', 'Beautiful 1-carat diamond engagement ring in 14k white gold setting. Perfect for that special proposal moment.', 2999.99, 'diamond-ring.jpg', 1, '2025-07-13 05:27:00'),
-(2, 'Gold Wedding Band', 'Classic 18k gold wedding band with elegant finish. Comfortable fit for everyday wear.', 899.99, 'gold-band.jpg', 1, '2025-07-13 05:27:00'),
-(3, 'Pearl Necklace', 'Elegant freshwater pearl necklace with 18k gold clasp. Perfect for formal occasions.', 599.99, 'pearl-necklace.jpg', 2, '2025-07-13 05:27:00'),
-(4, 'Silver Chain Necklace', 'Minimalist sterling silver chain necklace. Versatile design for any outfit.', 199.99, 'silver-star-necklace.jpeg', 2, '2025-07-13 05:27:00'),
-(5, 'Diamond Stud Earrings', 'Timeless 0.5-carat diamond stud earrings in white gold setting.', 1299.99, 'diamond-studs.jpg', 3, '2025-07-13 05:27:00'),
-(6, 'Gold Hoop Earrings', 'Classic 14k gold hoop earrings. Perfect size for everyday elegance.', 399.99, 'gold-hoops.jpg', 3, '2025-07-13 05:27:00'),
-(7, 'Tennis Bracelet', 'Stunning diamond tennis bracelet with 14k white gold setting.', 2499.99, 'tennis-bracelet.jpg', 4, '2025-07-13 05:27:00'),
-(8, 'Charm Bracelet', 'Sterling silver charm bracelet with multiple charms. Personalize with your own charms.', 299.99, 'charm-bracelet.jpg', 4, '2025-07-13 05:27:00'),
-(9, 'Luxury Watch', 'Premium automatic watch with leather strap. Water-resistant and elegant design.', 1899.99, 'luxury-watch.jpg', 5, '2025-07-13 05:27:00'),
-(10, 'Classic Watch', 'Timeless design watch with stainless steel band. Perfect for business or casual wear.', 799.99, 'classic-watch.jpg', 5, '2025-07-13 05:27:00'),
-(11, 'Sapphire Ring', 'Stunning blue sapphire ring surrounded by diamonds in white gold setting.', 1599.99, 'sapphire-ring.jpg', 1, '2025-07-13 05:27:00'),
-(12, 'Emerald Necklace', 'Vintage-style emerald pendant necklace with diamond accents.', 899.99, 'emerald-necklace.jpg', 2, '2025-07-13 05:27:00'),
-(13, 'Gold earrings', 'Delicate gold heart pendant with diamond accent', 649.99, 'gold-earrings-1.jpg', 1, '2025-07-13 11:49:50'),
-(16, 'Gold Star Necklace', 'Gold necklace with a star-shaped pendant', 799.99, 'gold-full.jpg', 1, '2025-07-13 11:49:50'),
-(17, 'Gold Infinity Ring', 'Gold ring with infinity symbol and small diamonds', 899.99, 'gold-ring-1.jpg', 1, '2025-07-13 11:49:50'),
-(18, 'Silver Moon Pendant', 'Mystical silver moon pendant with crystal accent', 249.99, 'silver-dant.jpg', 2, '2025-07-13 11:49:50'),
-(20, 'Silver star necklace', 'Minimalist silver bar bracelet for everyday wear', 149.99, 'silver-star-necklace.jpeg', 2, '2025-07-13 11:49:50'),
-(21, 'Silver saphire chain', 'Silver necklace with a star-shaped pendant', 299.99, 'silversaphire.jpg', 2, '2025-07-13 11:49:50'),
-(22, 'Silver Infinity Ring', 'Silver ring with infinity symbol and small crystals', 349.99, 'silver-infinity-ring.jpeg', 2, '2025-07-13 11:49:50'),
-(23, 'Platinum Heart Pendant', 'Beautiful platinum heart pendant with diamond', 1499.99, 'platinum-heart-pendant.jpg', 3, '2025-07-13 11:49:50'),
-(24, 'Platinum Bar Bracelet', 'Minimalist platinum bar bracelet for luxury wear', 1299.99, 'platinum-bar-bracelet.jpg', 3, '2025-07-13 11:49:50'),
-(25, 'Platinum Leaf Earrings', 'Elegant platinum earrings shaped like leaves', 1199.99, 'platinum-leaf-earrings.jpg', 3, '2025-07-13 11:49:50'),
-(26, 'Platinum Star Necklace', 'Platinum necklace with a star-shaped pendant', 1799.99, 'platinum-star-necklace.jpg', 3, '2025-07-13 11:49:50'),
-(27, 'Platinum Infinity Ring', 'Platinum ring with infinity symbol and diamonds', 1999.99, 'platinum-infinity-ring.jpg', 3, '2025-07-13 11:49:50');
+(1, 'Diamond Engagement Ring', 'Beautiful 1-carat diamond engagement ring in 14k white gold setting. Perfect for that special proposal moment.', 2999.99, 'rings/diamond engajement ring.jpg', 1, '2025-07-13 05:27:00'),
+(2, 'Gold Wedding Band', 'Classic 18k gold wedding band with elegant finish. Comfortable fit for everyday wear.', 899.99, 'rings/gold infinity ring.jpg', 1, '2025-07-13 05:27:00'),
+(3, 'Pearl Necklace', 'Elegant freshwater pearl necklace with 18k gold clasp. Perfect for formal occasions.', 599.99, 'necklaces/pearl necklace.jpg', 2, '2025-07-13 05:27:00'),
+(4, 'Silver Chain Necklace', 'Minimalist sterling silver chain necklace. Versatile design for any outfit.', 199.99, 'necklaces/silver chain necklace.jpg', 2, '2025-07-13 05:27:00'),
+(5, 'Diamond Stud Earrings', 'Timeless 0.5-carat diamond stud earrings in white gold setting.', 1299.99, 'earrings/diamond stud earings.jpg', 3, '2025-07-13 05:27:00'),
+(6, 'Gold Hoop Earrings', 'Classic 14k gold hoop earrings. Perfect size for everyday elegance.', 399.99, 'earrings/gold hoop earings.jpg', 3, '2025-07-13 05:27:00'),
+(7, 'Tennis Bracelet', 'Stunning diamond tennis bracelet with 14k white gold setting.', 2499.99, 'bracelets/tennis bracelet.jpg', 4, '2025-07-13 05:27:00'),
+(8, 'Charm Bracelet', 'Sterling silver charm bracelet with multiple charms. Personalize with your own charms.', 299.99, 'bracelets/charm bracelet.jpg', 4, '2025-07-13 05:27:00'),
+(9, 'Luxury Watch', 'Premium automatic watch with leather strap. Water-resistant and elegant design.', 1899.99, 'watches/luxury watch.jpg', 5, '2025-07-13 05:27:00'),
+(10, 'Classic Watch', 'Timeless design watch with stainless steel band. Perfect for business or casual wear.', 799.99, 'watches/classic watch.jpg', 5, '2025-07-13 05:27:00'),
+(11, 'Sapphire Ring', 'Stunning blue sapphire ring surrounded by diamonds in white gold setting.', 1599.99, 'rings/saphire ring.jpg', 1, '2025-07-13 05:27:00'),
+(12, 'Emerald Necklace', 'Vintage-style emerald pendant necklace with diamond accents.', 899.99, 'necklaces/Emerald necklace.jpg', 2, '2025-07-13 05:27:00'),
+(13, 'Gold earrings', 'Delicate gold heart pendant with diamond accent', 649.99, 'earrings/gold earings.jpg', 3, '2025-07-13 11:49:50'),
+(16, 'Gold Star Necklace', 'Gold necklace with a star-shaped pendant', 799.99, 'necklaces/gold star necklace.jpg', 2, '2025-07-13 11:49:50'),
+(17, 'Gold Infinity Ring', 'Gold ring with infinity symbol and small diamonds', 899.99, 'rings/gold infinity ring.jpg', 1, '2025-07-13 11:49:50'),
+(18, 'Silver Moon Pendant', 'Mystical silver moon pendant with crystal accent', 249.99, 'necklaces/silver moon pendant.jpg', 2, '2025-07-13 11:49:50'),
+(20, 'Silver star necklace', 'Minimalist silver bar bracelet for everyday wear', 149.99, 'necklaces/silver star necklace.jpg', 2, '2025-07-13 11:49:50'),
+(21, 'Silver saphire chain', 'Silver necklace with a star-shaped pendant', 299.99, 'necklaces/silver saphire chain (2).jpg', 2, '2025-07-13 11:49:50'),
+(22, 'Silver Infinity Ring', 'Silver ring with infinity symbol and small crystals', 349.99, 'rings/silver infity ring.jpg', 1, '2025-07-13 11:49:50'),
+(23, 'Platinum Heart Pendant', 'Beautiful platinum heart pendant with diamond', 1499.99, 'necklaces/platinum heart pendant.jpg', 2, '2025-07-13 11:49:50'),
+(24, 'Platinum Bar Bracelet', 'Minimalist platinum bar bracelet for luxury wear', 1299.99, 'bracelets/platinum bar braclet.jpg', 4, '2025-07-13 11:49:50'),
+(25, 'Platinum Leaf Earrings', 'Elegant platinum earrings shaped like leaves', 1199.99, 'earrings/platinum leaf earings.jpg', 3, '2025-07-13 11:49:50'),
+(26, 'Platinum Star Necklace', 'Platinum necklace with a star-shaped pendant', 1799.99, 'necklaces/platinum star necklace.jpg', 2, '2025-07-13 11:49:50'),
+(27, 'Platinum Infinity Ring', 'Platinum ring with infinity symbol and diamonds', 1999.99, 'rings/platinum infinity ring.jpg', 1, '2025-07-13 11:49:50');
 
 -- --------------------------------------------------------
 
@@ -238,12 +277,15 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `created_at`) VALUES
 (1, 'Alice', 'alice@example.com', 'password123', '2025-07-13 05:45:59'),
-(2, 'Bob', 'bob@example.com', 'password123', '2025-07-13 05:45:59'),
+(2, 'Bob', 'bob@gmail.com', 'password123', '2025-07-13 05:45:59'),
 (3, 'Carol', 'carol@example.com', 'password123', '2025-07-13 05:45:59'),
 (5, 'dhwani', 'dhwanichavda45@gmail.com', '$2y$10$0tdEXD2KUcTUcwrZMUoN/.zoEopZdAoKV0PUsSNszFzZ7YSY9X0MO', '2025-07-13 12:17:34'),
 (6, 'john doe', 'johndoe@gmail.com', '$2y$10$3E70YIlNZZE3q3BMf/qkc.cb9nU6qDXltiPzuvuFAcFQvodPitBzm', '2025-07-16 06:28:45'),
 (7, 'divyesh', 'divyesh12@gmail.com', '$2y$10$ttdjwEsZAI895AahlCVzHee6AxWroE6jNiOvXZ8nBtwdL8er0l7nG', '2025-07-31 09:07:58'),
-(8, 'ana jonas', 'ana12@gmail.com', '$2y$10$6WI8gesNwBT0tKNdge1.YeRTR8PdavE70fCZAEJq6NgYTqZIKauHK', '2025-08-28 08:04:40');
+(8, 'ana jonas', 'ana12@gmail.com', '$2y$10$6WI8gesNwBT0tKNdge1.YeRTR8PdavE70fCZAEJq6NgYTqZIKauHK', '2025-08-28 08:04:40'),
+(9, 'sinhal', 'sinhal@gmail.com', '$2y$10$vzoeFJ1SIWnZLXtVv0S6Cenn1cyrkOEL9VVkb3X57FnRDJfJbKkHe', '2025-09-06 23:10:58'),
+(10, 'john', 'john@gmail.com', '$2y$10$A7RCPWcyoZ6kj6IOuol2feWvtPqIRcB0BT19Sdw68TaC8L4nLcbMa', '2025-09-07 13:50:40'),
+(11, 'ramji bapa', 'ramji@gmail.com', '$2y$10$zCIfDsXyQrJgvx6OAFGuqeqWEfF459EfZvCZUrAqlPR8kdbqiZhX6', '2025-09-07 13:54:33');
 
 --
 -- Indexes for dumped tables
@@ -326,13 +368,13 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `feedback`
@@ -350,25 +392,25 @@ ALTER TABLE `jewle_cat`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `placed_orders`
 --
 ALTER TABLE `placed_orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Constraints for dumped tables

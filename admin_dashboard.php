@@ -510,7 +510,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <h4>Items in Order #<?= (int)$order['id'] ?>:</h4>
                                                 <ul>
                                                     <?php
-                                                    $items_stmt = mysqli_prepare($conn, "SELECT oi.quantity, oi.price, p.name AS product_name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?");
+                                                    $items_stmt = mysqli_prepare($conn, "SELECT oi.quantity, oi.price, p.name AS product_name FROM placed_orders oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?");
                                                     mysqli_stmt_bind_param($items_stmt, "i", $order['id']);
                                                     mysqli_stmt_execute($items_stmt);
                                                     $items_result = mysqli_stmt_get_result($items_stmt);

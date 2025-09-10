@@ -52,7 +52,7 @@ try {
         SELECT o.id, o.total_amount, o.payment_method, o.delivery_address, o.order_date,
                oi.product_id, oi.quantity, oi.price, p.name as product_name
         FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.order_id
+        LEFT JOIN placed_orders oi ON o.id = oi.order_id
         LEFT JOIN products p ON oi.product_id = p.id
         WHERE o.user_id = ?
         ORDER BY o.order_date DESC, o.id DESC

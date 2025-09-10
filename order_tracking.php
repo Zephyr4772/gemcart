@@ -41,7 +41,7 @@ if ($order_id && is_numeric($order_id)) {
             // Get order items
             $stmt = $pdo->prepare("
                 SELECT oi.*, p.name as product_name, p.image as product_image
-                FROM order_items oi
+                FROM placed_orders oi
                 JOIN products p ON oi.product_id = p.id
                 WHERE oi.order_id = ?
             ");
