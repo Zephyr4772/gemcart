@@ -190,13 +190,6 @@ if (!isset($_SESSION['user_id'])) {
         .order-item:last-child {
             border-bottom: none;
         }
-        .order-item-img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 5px;
-            margin-right: 1rem;
-        }
         .order-item-details {
             flex: 1;
         }
@@ -377,7 +370,7 @@ if (!isset($_SESSION['user_id'])) {
                                 <div class="form-group">
                                     <label for="payment-method">Payment Method *</label>
                                     <div class="payment-toggle">
-                                        <button type="button" id="payment-toggle" class="btn btn-secondary" onclick="togglePaymentMethod()">
+                                        <button type="button" id="payment-toggle" class="btn btn-secondary" disabled>
                                             <span id="payment-method-text">Cash on Delivery</span>
                                         </button>
                                         <input type="hidden" id="payment-method" name="payment-method" value="cash">
@@ -424,17 +417,6 @@ if (!isset($_SESSION['user_id'])) {
         let currentStep = 1;
         let orderData = null;
         
-        // Function to determine category folder based on image name
-        function getCategoryFolder(imageName) {
-            // Extract category abbreviation from image name (e.g., 1-rng-g.jpg -> rings)
-            if (imageName.includes('-rng')) return 'rings';
-            if (imageName.includes('-nck')) return 'necklaces';
-            if (imageName.includes('-erg')) return 'earrings';
-            if (imageName.includes('-brl')) return 'bracelets';
-            if (imageName.includes('-wch')) return 'watches';
-            return 'products'; // default
-        }
-        
         function loadOrderSummary() {
             const userLoggedIn = document.body.dataset.userLoggedIn === 'true';
 
@@ -477,7 +459,6 @@ if (!isset($_SESSION['user_id'])) {
             orderData.items.forEach(item => {
                 itemsHTML += `
                     <div class="order-item">
-                        <img src="assets/${getCategoryFolder(item.image)}/${item.image}" alt="${item.name}" class="order-item-img" onerror="this.src='https://via.placeholder.com/60x60?text=Product'">
                         <div class="order-item-details">
                             <div class="order-item-name">${item.name}</div>
                             <div class="order-item-price">₹${(item.price * 83).toFixed(2)}</div>
@@ -562,7 +543,7 @@ if (!isset($_SESSION['user_id'])) {
             // Prepare order data
             const orderData = {
                 cart_items: cartItems,
-                payment_method: paymentMethod === 'cash' ? 'Cash on Delivery' : 'Online Payment',
+                payment_method: 'Cash on Delivery',  // Enforce cash only
                 delivery_address: deliveryAddress
             };
             
@@ -600,7 +581,7 @@ if (!isset($_SESSION['user_id'])) {
                             <h4>Order Details:</h4>
                             <p><strong>Order ID:</strong> ${data.order_id}</p>
                             <p><strong>Total Amount:</strong> ₹${(data.total_amount * 83).toFixed(2)}</p>
-                            <p><strong>Payment Method:</strong> ${orderData.payment_method}</p>
+                            <p><strong>Payment Method:</strong> Cash on Delivery</p>
                     `;
                     
                     if (data.warning) {
@@ -651,24 +632,6 @@ if (!isset($_SESSION['user_id'])) {
             setTimeout(() => {
                 errorDiv.style.display = 'none';
             }, 5000);
-        }
-        
-        function togglePaymentMethod() {
-            const paymentToggle = document.getElementById('payment-toggle');
-            const paymentMethodInput = document.getElementById('payment-method');
-            const paymentMethodText = document.getElementById('payment-method-text');
-            
-            if (paymentMethodInput.value === 'cash') {
-                // Switch to online payment
-                paymentMethodInput.value = 'cashless';
-                paymentMethodText.textContent = 'Online Payment';
-                paymentToggle.classList.add('active');
-            } else {
-                // Switch to cash on delivery
-                paymentMethodInput.value = 'cash';
-                paymentMethodText.textContent = 'Cash on Delivery';
-                paymentToggle.classList.remove('active');
-            }
         }
         
         document.addEventListener('DOMContentLoaded', function() {

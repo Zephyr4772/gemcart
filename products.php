@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/functions.php';
 
 // Fetch categories for filter
 $categories = [];
@@ -153,6 +154,7 @@ $product_count = mysqli_num_rows($result);
             width: 100%;
             height: 220px;
             object-fit: cover;
+            object-position: center;
             border-radius: 18px 18px 0 0;
             box-shadow: 0 2px 12px #5a7ca744;
         }
@@ -237,129 +239,140 @@ $product_count = mysqli_num_rows($result);
         }
     </style>
 </head>
-<body data-user-logged-in="<?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>" 
-      data-user-id="<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; ?>">
+<body class="has-hero" data-user-logged-in="<?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>" data-user-id="<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; ?>">
     <?php include 'includes/header.php'; ?>
-    <div class="products-header">
-        <h1>Our Products</h1>
-        <div class="product-count">
-            Showing <?php echo $product_count; ?> product<?php if ($product_count != 1) echo 's'; ?>
-            <?php if ($gender_filter): ?>
-                - <?php echo ucfirst($gender_filter); ?>'s Collection
-            <?php endif; ?>
+    
+    <main>
+        <div class="products-header">
+            <h1>Our Products</h1>
+            <div class="product-count">
+                Showing <?php echo $product_count; ?> product<?php if ($product_count != 1) echo 's'; ?>
+                <?php if ($gender_filter): ?>
+                    - <?php echo ucfirst($gender_filter); ?>'s Collection
+                <?php endif; ?>
+            </div>
         </div>
-    </div>
-    <form method="get" class="filter-bar">
-        <?php if ($gender_filter): ?>
-            <input type="hidden" name="gender" value="<?php echo htmlspecialchars($gender_filter); ?>">
-        <?php endif; ?>
-        <label for="category">Category:</label>
-        <select name="category" id="category" onchange="this.form.submit()">
-            <option value="0">All Categories</option>
-            <?php foreach ($categories as $cat_id => $cat_name): ?>
-                <option value="<?php echo $cat_id; ?>" <?php if ($category_filter == $cat_id) echo 'selected'; ?>><?php echo htmlspecialchars($cat_name); ?></option>
-            <?php endforeach; ?>
-        </select>
-    </form>
-    <div class="products-section-bg">
-        <div class="products-grid">
-            <?php if ($product_count > 0): ?>
-                <?php $i = 0; while ($product = mysqli_fetch_assoc($result)): $i++; ?>
-                    <div class="product-card">
-                        <?php 
-                            // Use the image path stored in the database
-                            // If no image is set in database, try to find one based on product name
-                            // Otherwise, use a placeholder
-                            $imgSrc = '';
-                            
-                            // First, check if there's an image path in the database
-                            if (!empty($product['image']) && $product['image'] !== 'default.jpg') {
-                                // Check if it's a full URL or a relative path
-                                if (filter_var($product['image'], FILTER_VALIDATE_URL)) {
-                                    $imgSrc = $product['image'];
-                                } else {
-                                    // It's a relative path, check if file exists
-                                    $fullPath = 'assets/' . $product['image'];
-                                    if (file_exists($fullPath)) {
-                                        $imgSrc = $fullPath;
+        <form method="get" class="filter-bar">
+            <?php if ($gender_filter): ?>
+                <input type="hidden" name="gender" value="<?php echo htmlspecialchars($gender_filter); ?>">
+            <?php endif; ?>
+            <label for="category">Category:</label>
+            <select name="category" id="category" onchange="this.form.submit()">
+                <option value="0">All Categories</option>
+                <?php foreach ($categories as $cat_id => $cat_name): ?>
+                    <option value="<?php echo $cat_id; ?>" <?php if ($category_filter == $cat_id) echo 'selected'; ?>><?php echo htmlspecialchars($cat_name); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </form>
+        <div class="products-section-bg">
+            <div class="products-grid">
+                <?php if ($product_count > 0): ?>
+                    <?php $i = 0; while ($product = mysqli_fetch_assoc($result)): $i++; ?>
+                        <div class="product-card">
+                            <?php 
+                                // Use the image path stored in the database
+                                // If no image is set in database, try to find one based on product name
+                                // Otherwise, use a placeholder
+                                $imgSrc = '';
+                                
+                                // First, check if there's an image path in the database
+                                if (!empty($product['image']) && $product['image'] !== 'default.jpg') {
+                                    // Check if it's a full URL or a relative path
+                                    if (filter_var($product['image'], FILTER_VALIDATE_URL)) {
+                                        $imgSrc = $product['image'];
                                     } else {
-                                        // Try to find the image in the category folder
-                                        $category_folder = strtolower($product['category_name']);
-                                        $category_folder = str_replace(' ', '', $category_folder);
-                                        $fullPath = 'assets/' . $category_folder . '/' . $product['image'];
+                                        // It's a relative path, check if file exists
+                                        $fullPath = 'assets/' . $product['image'];
                                         if (file_exists($fullPath)) {
                                             $imgSrc = $fullPath;
                                         } else {
+                                            // Try to find the image in the category folder
+                                            $category_folder = strtolower($product['category_name']);
+                                            $category_folder = str_replace(' ', '', $category_folder);
+                                            $fullPath = 'assets/' . $category_folder . '/' . $product['image'];
+                                            if (file_exists($fullPath)) {
+                                                $imgSrc = $fullPath;
+                                            } else {
+                                                // Fallback to placeholder
+                                                $imgSrc = 'https://via.placeholder.com/300x220?text=' . urlencode($product['name']);
+                                            }
+                                        }
+                                    }
+                                    // Set image_name for the addToCart function
+                                    $image_name = basename($product['image']);
+                                } else {
+                                    // No image in database, try to find one based on product name
+                                    $category_folder = strtolower($product['category_name']);
+                                    $category_folder = str_replace(' ', '', $category_folder);
+                                    
+                                    // Create a clean filename from the product name
+                                    $image_name = strtolower($product['name']);
+                                    $image_name = preg_replace('/[^a-z0-9\s-]/', '', $image_name);
+                                    $image_name = preg_replace('/[\s-]+/', ' ', $image_name);
+                                    $image_name = str_replace(' ', '-', $image_name);
+                                    $image_name .= '.jpg';
+                                    
+                                    // Check if specific image exists
+                                    $fullPath = 'assets/' . $category_folder . '/' . $image_name;
+                                    if (file_exists($fullPath)) {
+                                        $imgSrc = $fullPath;
+                                    } else {
+                                        // Try to find any image in the category folder
+                                        $category_images = glob('assets/' . $category_folder . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+                                        if (!empty($category_images)) {
+                                            $imgSrc = $category_images[0];
+                                            $image_name = basename($category_images[0]);
+                                        } else {
                                             // Fallback to placeholder
                                             $imgSrc = 'https://via.placeholder.com/300x220?text=' . urlencode($product['name']);
+                                            $image_name = '';
                                         }
                                     }
                                 }
-                                // Set image_name for the addToCart function
-                                $image_name = basename($product['image']);
-                            } else {
-                                // No image in database, try to find one based on product name
-                                $category_folder = strtolower($product['category_name']);
-                                $category_folder = str_replace(' ', '', $category_folder);
-                                
-                                // Create a clean filename from the product name
-                                $image_name = strtolower($product['name']);
-                                $image_name = preg_replace('/[^a-z0-9\s-]/', '', $image_name);
-                                $image_name = preg_replace('/[\s-]+/', ' ', $image_name);
-                                $image_name = str_replace(' ', '-', $image_name);
-                                $image_name .= '.jpg';
-                                
-                                // Check if specific image exists
-                                $fullPath = 'assets/' . $category_folder . '/' . $image_name;
-                                if (file_exists($fullPath)) {
-                                    $imgSrc = $fullPath;
-                                } else {
-                                    // Try to find any image in the category folder
-                                    $category_images = glob('assets/' . $category_folder . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
-                                    if (!empty($category_images)) {
-                                        $imgSrc = $category_images[0];
-                                        $image_name = basename($category_images[0]);
-                                    } else {
-                                        // Fallback to placeholder
-                                        $imgSrc = 'https://via.placeholder.com/300x220?text=' . urlencode($product['name']);
-                                        $image_name = '';
-                                    }
-                                }
-                            }
-                        ?>
-                        <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
-                        <h3>
-                            <?php echo htmlspecialchars($product['name']); ?>
-                            <?php if ($i == 1): ?><span class="badge">Bestseller</span> <span style="color:#5a7ca7;">&#10024;</span><?php endif; ?>
-                            <?php if ($i == 2): ?><span class="badge">New</span><?php endif; ?>
-                            <?php if ($i == 3): ?><span class="badge">Limited</span><?php endif; ?>
-                        </h3>
-                        <div class="category">Category: <?php echo htmlspecialchars($product['category_name']); ?></div>
-                        <div class="desc"><?php echo htmlspecialchars($product['description']); ?></div>
-                        <div class="price">₹<?php echo number_format($product['price'] * 83, 2); ?></div>
-                        <div class="actions">
-                            <?php if (isset($_SESSION['user_id'])): ?>
-                            <button type="button" class="btn" onclick="addToCart(<?php echo $product['id']; ?>, '<?php echo addslashes($product['name']); ?>', <?php echo $product['price']; ?>, '<?php echo addslashes($image_name); ?>', 1)">
-                                <i class="fa fa-shopping-bag"></i> Add to Cart
-                            </button>
-                            <?php else: ?>
-                            <a href="login.php" class="btn">
-                                <i class="fa fa-user"></i> Login to Add
-                            </a>
-                            <?php endif; ?>
+                            ?>
+                            <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                            <h3>
+                                <?php echo htmlspecialchars($product['name']); ?>
+                                <?php if ($i == 1): ?><span class="badge">Bestseller</span> <span style="color:#5a7ca7;">&#10024;</span><?php endif; ?>
+                                <?php if ($i == 2): ?><span class="badge">New</span><?php endif; ?>
+                                <?php if ($i == 3): ?><span class="badge">Limited</span><?php endif; ?>
+                            </h3>
+                            <div class="category">Category: <?php echo htmlspecialchars($product['category_name']); ?></div>
+                            <div class="desc"><?php echo htmlspecialchars($product['description']); ?></div>
+                            <div class="price">₹<?php echo number_format($product['price'] * 83, 2); ?></div>
+                            <div class="actions">
+                                <?php if (isset($_SESSION['user_id'])): ?>
+                                <button type="button" class="btn" onclick="addToCart(<?php echo $product['id']; ?>, '<?php echo addslashes($product['name']); ?>', <?php echo $product['price']; ?>, '<?php echo addslashes($image_name); ?>', 1)">
+                                    <i class="fa fa-shopping-bag"></i> Add to Cart
+                                </button>
+                                <?php else: ?>
+                                <a href="login.php" class="btn">
+                                    <i class="fa fa-user"></i> Login to Add
+                                </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                    </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="no-products">No products found for your filter/search.</div>
-            <?php endif; ?>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <div class="no-products">No products found for your filter/search.</div>
+                <?php endif; ?>
+            </div>
         </div>
-    </div>
+    </main>
     <?php include 'includes/footer.php'; ?>
     <script>
         function addToCart(productId, productName, productPrice, productImage, quantity) {
+            // Try to use the cart manager first
             if (window.cartManager) {
-                window.cartManager.addToCart(productId, productName, productPrice, productImage, quantity || 1);
+                const success = window.cartManager.addToCart(productId, productName, productPrice, productImage, quantity || 1);
+                // If the cart manager failed (e.g., due to login detection issues), fall back to server-side
+                if (!success) {
+                    // Redirect to the server-side add to cart endpoint
+                    window.location.href = 'add_to_cart.php?id=' + productId;
+                }
+            } else {
+                // Fallback to server-side if cart manager is not available
+                window.location.href = 'add_to_cart.php?id=' + productId;
             }
         }
     </script>

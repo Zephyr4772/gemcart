@@ -3,18 +3,6 @@ session_start();
 require_once 'includes/db.php';
 require_once 'includes/functions.php';
 
-// Function to get category folder name
-function getCategoryFolder($category_id) {
-    $categories = [
-        1 => 'rings',
-        2 => 'necklaces',
-        3 => 'earrings',
-        4 => 'bracelets',
-        5 => 'watches'
-    ];
-    return $categories[$category_id] ?? 'products';
-}
-
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php?redirect=cart');
@@ -53,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $cart_products = [];
 $cart_total = 0;
 
-$query = "SELECT p.id, p.name, p.price, p.image, p.category_id, c.quantity, (p.price * c.quantity) as subtotal
+$query = "SELECT p.id, p.name, p.price, c.quantity, (p.price * c.quantity) as subtotal
           FROM cart c
           JOIN products p ON c.product_id = p.id
           WHERE c.user_id = ?";
@@ -120,12 +108,6 @@ while ($row = $result->fetch_assoc()) {
             font-weight: 700;
             text-transform: uppercase;
             font-size: 0.9rem;
-        }
-        .cart-img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 4px;
         }
         .cart-qty-input {
             width: 60px;
@@ -197,6 +179,8 @@ while ($row = $result->fetch_assoc()) {
 <body>
     <?php include 'includes/header.php'; ?>
     
+   
+    
     <main class="cart-main">
         <div class="cart-container">
             <h1 class="cart-title">Your Cart</h1>
@@ -214,7 +198,6 @@ while ($row = $result->fetch_assoc()) {
                     <table class="cart-table">
                         <thead>
                             <tr>
-                                <th>Product</th>
                                 <th>Name</th>
                                 <th>Price</th>
                                 <th>Quantity</th>
@@ -225,11 +208,6 @@ while ($row = $result->fetch_assoc()) {
                         <tbody>
                             <?php foreach ($cart_products as $product): ?>
                             <tr>
-                                <td>
-                                    <img src="<?php echo !empty($product['image']) ? 'https://via.placeholder.com/80x80?text=' . urlencode($product['name']) : 'https://via.placeholder.com/80x80?text=Product'; ?>" 
-                                         alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                                         class="cart-img">
-                                </td>
                                 <td><?php echo htmlspecialchars($product['name']); ?></td>
                                 <td>₹<?php echo number_format($product['price'] * 83, 2); ?></td>
                                 <td>

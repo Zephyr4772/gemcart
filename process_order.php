@@ -29,7 +29,7 @@ try {
     
     $user_id = $_SESSION['user_id'];
     $cart_items = $input['cart_items'] ?? [];
-    $payment_method = $input['payment_method'] ?? '';
+    $payment_method = 'Cash on Delivery';  // Enforce cash-only payments
     $delivery_address = $input['delivery_address'] ?? '';
     
     // Validate input
@@ -37,9 +37,8 @@ try {
         throw new Exception('Cart is empty');
     }
     
-    if (empty($payment_method)) {
-        throw new Exception('Payment method is required');
-    }
+    // Removed payment method validation since we're enforcing cash-only
+    // Payment method is now always 'Cash on Delivery'
     
     if (empty($delivery_address)) {
         throw new Exception('Delivery address is required');
@@ -90,9 +89,9 @@ try {
         // Insert order
         $stmt = $pdo->prepare("
             INSERT INTO orders (user_id, total_amount, payment_method, delivery_address, order_date) 
-            VALUES (?, ?, ?, ?, NOW())
+            VALUES (?, ?, 'cash', ?, NOW())
         ");
-        $stmt->execute([$user_id, $total_amount, $payment_method, $delivery_address]);
+        $stmt->execute([$user_id, $total_amount, $delivery_address]);
         
         $order_id = $pdo->lastInsertId();
         

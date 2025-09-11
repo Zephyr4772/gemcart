@@ -100,6 +100,7 @@ $product_count = mysqli_num_rows($result);
             width: 100%;
             height: 260px;
             object-fit: cover;
+            object-position: center;
             border-radius: 18px 18px 0 0;
             box-shadow: 0 2px 12px #5a7ca744;
         }
@@ -238,8 +239,56 @@ $product_count = mysqli_num_rows($result);
                     <?php $i = 0; while ($product = mysqli_fetch_assoc($result)): $i++; ?>
                         <div class="product-card">
                             <?php 
-                                // Use placeholder images as requested
-                                $imgSrc = 'https://via.placeholder.com/300x260?text=' . urlencode($product['name']);
+                                // Use the image path stored in the database
+                                // If no image is set in database, try to find one based on product name
+                                // Otherwise, use a placeholder
+                                $imgSrc = '';
+                                
+                                // First, check if there's an image path in the database
+                                if (!empty($product['image']) && $product['image'] !== 'default.jpg') {
+                                    // Check if it's a full URL or a relative path
+                                    if (filter_var($product['image'], FILTER_VALIDATE_URL)) {
+                                        $imgSrc = $product['image'];
+                                    } else {
+                                        // It's a relative path, check if file exists
+                                        $fullPath = 'assets/' . $product['image'];
+                                        if (file_exists($fullPath)) {
+                                            $imgSrc = $fullPath;
+                                        } else {
+                                            // Try to find the image in the watches folder
+                                            $fullPath = 'assets/watches/' . $product['image'];
+                                            if (file_exists($fullPath)) {
+                                                $imgSrc = $fullPath;
+                                            } else {
+                                                // Fallback to placeholder
+                                                $imgSrc = 'https://via.placeholder.com/300x260?text=' . urlencode($product['name']);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // No image in database, try to find one based on product name
+                                    // Create a clean filename from the product name
+                                    $image_name = strtolower($product['name']);
+                                    $image_name = preg_replace('/[^a-z0-9\s-]/', '', $image_name);
+                                    $image_name = preg_replace('/[\s-]+/', ' ', $image_name);
+                                    $image_name = str_replace(' ', '-', $image_name);
+                                    $image_name .= '.jpg';
+                                    
+                                    // Check if specific image exists in watches folder
+                                    $fullPath = 'assets/watches/' . $image_name;
+                                    if (file_exists($fullPath)) {
+                                        $imgSrc = $fullPath;
+                                    } else {
+                                        // Try to find any image in the watches folder
+                                        $watches_images = glob('assets/watches/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+                                        if (!empty($watches_images)) {
+                                            $imgSrc = $watches_images[0];
+                                        } else {
+                                            // Fallback to placeholder
+                                            $imgSrc = 'https://via.placeholder.com/300x260?text=' . urlencode($product['name']);
+                                        }
+                                    }
+                                }
                             ?>
                             <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
                             <h3>

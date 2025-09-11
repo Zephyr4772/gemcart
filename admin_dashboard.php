@@ -22,18 +22,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name']);
         $description = trim($_POST['description']);
         $price = (float)$_POST['price'];
+        $image = trim($_POST['image']);
         $category_id = (int)$_POST['category_id'];
 
         if (empty($name) || empty($price) || empty($category_id)) {
             $_SESSION['flash_message_error'] = "Name, price, and category are required.";
         } else {
             if ($action === 'edit_product') {
-                $stmt = mysqli_prepare($conn, "UPDATE products SET name = ?, description = ?, price = ?, category_id = ? WHERE id = ?");
-                mysqli_stmt_bind_param($stmt, "ssdii", $name, $description, $price, $category_id, $product_id);
+                if (!empty($image)) {
+                    $stmt = mysqli_prepare($conn, "UPDATE products SET name = ?, description = ?, price = ?, image = ?, category_id = ? WHERE id = ?");
+                    mysqli_stmt_bind_param($stmt, "ssdsii", $name, $description, $price, $image, $category_id, $product_id);
+                } else {
+                    $stmt = mysqli_prepare($conn, "UPDATE products SET name = ?, description = ?, price = ?, category_id = ? WHERE id = ?");
+                    mysqli_stmt_bind_param($stmt, "ssdii", $name, $description, $price, $category_id, $product_id);
+                }
                 $_SESSION['flash_message'] = "Product updated successfully.";
             } else {
-                $stmt = mysqli_prepare($conn, "INSERT INTO products (name, description, price, category_id) VALUES (?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt, "ssdi", $name, $description, $price, $category_id);
+                if (!empty($image)) {
+                    $stmt = mysqli_prepare($conn, "INSERT INTO products (name, description, price, image, category_id) VALUES (?, ?, ?, ?, ?)");
+                    mysqli_stmt_bind_param($stmt, "ssdsi", $name, $description, $price, $image, $category_id);
+                } else {
+                    $stmt = mysqli_prepare($conn, "INSERT INTO products (name, description, price, category_id) VALUES (?, ?, ?, ?)");
+                    mysqli_stmt_bind_param($stmt, "ssdi", $name, $description, $price, $category_id);
+                }
                 $_SESSION['flash_message'] = "Product added successfully.";
             }
             if (!mysqli_stmt_execute($stmt)) {
@@ -137,6 +148,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['flash_message_error'] = "Error removing item from cart.";
         }
     }
+    
+    // --- Order Actions ---
+    elseif ($action === 'delete_order') {
+        $order_id = (int)$_POST['order_id'];
+        // First delete the order items
+        $stmt = mysqli_prepare($conn, "DELETE FROM placed_orders WHERE order_id = ?");
+        mysqli_stmt_bind_param($stmt, "i", $order_id);
+        mysqli_stmt_execute($stmt);
+        
+        // Then delete the order
+        $stmt = mysqli_prepare($conn, "DELETE FROM orders WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "i", $order_id);
+        if (mysqli_stmt_execute($stmt)) {
+            $_SESSION['flash_message'] = "Order deleted successfully.";
+        } else {
+            $_SESSION['flash_message_error'] = "Error deleting order.";
+        }
+    }
 
     // Redirect to the same page to prevent form resubmission on refresh
     header("Location: admin_dashboard.php?page=$page" . ($user_id_filter ? "&user_id=$user_id_filter" : ""));
@@ -176,12 +205,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         tbody tr:hover { background-color: #f8f9fa; }
         td.actions { display: flex; gap: 10px; }
         .form-container { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .form-container h2 { color: #003152; }
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
         input[type=text], input[type=password], input[type=number], input[type=email], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         textarea { resize: vertical; min-height: 80px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 4px; background-color: #003152; color: white; cursor: pointer; text-decoration: none; display: inline-block; font-size: 1rem; }
-        .btn:hover { background-color: #001d33; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; background-color: #003152; color: white; cursor: pointer; text-decoration: none; display: inline-block; font-size: 1rem; transition: all 0.3s ease; }
+        .btn:hover { background-color: #001d33; transform: translateY(-2px); }
         .btn-secondary { background-color: #6c757d; }
         .btn-secondary:hover { background-color: #5a6268; }
         .btn-danger { background-color: #c82333; }
@@ -197,6 +227,269 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .order-items-container h4 { margin-top: 0; margin-bottom: 10px; } .order-items-container ul { list-style-type: none; padding-left: 0; margin: 0; }
         .user-filter { margin-bottom: 20px; }
         .user-filter select { width: auto; display: inline-block; margin-right: 10px; }
+        
+        /* Professional Approval Notification - Small green popup on top right */
+        .approval-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50; /* Green background */
+            color: white;
+            border-radius: 5px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+            min-width: 250px;
+        }
+        
+        .approval-notification.show {
+            transform: translateX(0);
+        }
+        
+        .approval-notification .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: white;
+            margin-left: 15px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .approval-notification .checkmark {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .form-container {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            animation: rainbowBorder 3s linear infinite;
+        }
+        
+        .bonita-active .stat-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            animation: rainbowBorder 3s linear infinite, bounce 3s infinite;
+            transition: all 0.3s ease;
+        }
+        
+        .bonita-active .stat-card:hover {
+            transform: translateY(-10px) scale(1.05);
+        }
+        
+        .bonita-active .order-header {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            animation: rainbowGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes rainbowGlow {
+            0% { box-shadow: 0 0 5px #ff9a9e; }
+            25% { box-shadow: 0 0 10px #a18cd1; }
+            50% { box-shadow: 0 0 15px #fbc2eb; }
+            75% { box-shadow: 0 0 10px #fad0c4; }
+            100% { box-shadow: 0 0 5px #ff9a9e; }
+        }
+        
+        .bonita-active .order-items-container {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 15px;
+            animation: fadeInOut 4s infinite;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        .bonita-active th, .bonita-active td {
+            position: relative;
+        }
+        
+        .bonita-active th::after, .bonita-active td::after {
+            content: "💖";
+            position: absolute;
+            right: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .bonita-active th:hover::after, .bonita-active td:hover::after {
+            opacity: 1;
+        }
+        
+        /* Bonita Popup Styles */
+        .bonita-active .approve-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .bonita-active .approve-popup.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .bonita-active .approve-popup-content {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            transform: scale(0.8) rotate(10deg);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            border: 5px solid white;
+            animation: popupEntrance 0.8s forwards;
+        }
+        
+        @keyframes popupEntrance {
+            0% { transform: scale(0.8) rotate(10deg); opacity: 0; }
+            70% { transform: scale(1.1) rotate(-5deg); }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+        
+        .bonita-active .approve-popup.active .approve-popup-content {
+            transform: scale(1);
+        }
+        
+        .bonita-active .approve-popup h2 {
+            color: #d35400;
+            margin-top: 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            animation: rainbowText 2s linear infinite;
+        }
+        
+        @keyframes rainbowText {
+            0% { color: #d35400; }
+            25% { color: #e74c3c; }
+            50% { color: #9b59b6; }
+            75% { color: #3498db; }
+            100% { color: #d35400; }
+        }
+        
+        .bonita-active .approve-popup p {
+            color: #e74c3c;
+            font-size: 1.4rem;
+            margin: 25px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .bonita-active .approve-popup .close-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .bonita-active .approve-popup .close-btn:hover {
+            background: linear-gradient(135deg, #ff5252 0%, #ff6b6b 100%);
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 12px 25px rgba(231, 76, 60, 0.5);
+        }
+        
+        .bonita-active .heart {
+            color: #e74c3c;
+            font-size: 2.5rem;
+            animation: heartbeat 1.5s infinite;
+            display: inline-block;
+            text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+        
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            5% { transform: scale(1.3); }
+            10% { transform: scale(1); }
+            15% { transform: scale(1.3); }
+            50% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+        
+        .bonita-active .sparkle {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            box-shadow: 0 0 10px #fff;
+        }
+        
+        /* Floating hearts background */
+        .bonita-active .floating-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .bonita-active .floating-heart {
+            position: absolute;
+            left: 0;
+            bottom: -50px; /* Start from the bottom */
+            font-size: 2rem;
+            opacity: 0;
+            animation-fill-mode: both;
+        }
+        
+        @keyframes floatHeart {
+            0% { 
+                transform: translateY(0) rotate(0deg); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translateY(-100vh) rotate(360deg); 
+                opacity: 0; 
+            }
+        }
+        
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            5% { transform: scale(1.3); }
+            10% { transform: scale(1); }
+            15% { transform: scale(1.3); }
+            50% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -251,12 +544,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="admin-header"><h1>Manage Products</h1></div>
                     <div class="form-container">
                         <h2><?= $edit_product ? 'Edit Product' : 'Add New Product' ?></h2>
+                        <p><em><strong>Image Path Note:</strong> Enter the relative path to the image file (e.g., "rings/diamond-ring.jpg"). 
+                        Images should be placed in the "assets" folder, organized by category. 
+                        Leave blank to use the default image.</em></p>
                         <form action="admin_dashboard.php?page=products" method="POST">
                             <input type="hidden" name="action" value="<?= $edit_product ? 'edit_product' : 'add_product' ?>">
                             <?php if ($edit_product): ?><input type="hidden" name="product_id" value="<?= (int)$edit_product['id'] ?>"><?php endif; ?>
                             <div class="form-group"><label for="name">Product Name</label><input type="text" name="name" value="<?= htmlspecialchars($edit_product['name'] ?? '') ?>" required></div>
                             <div class="form-group"><label for="description">Description</label><textarea name="description"><?= htmlspecialchars($edit_product['description'] ?? '') ?></textarea></div>
                             <div class="form-group"><label for="price">Price</label><input type="number" name="price" step="0.01" value="<?= htmlspecialchars($edit_product['price'] ?? '') ?>" required></div>
+                            <div class="form-group"><label for="image">Image Path</label><input type="text" name="image" value="<?= htmlspecialchars($edit_product['image'] ?? '') ?>" placeholder="e.g., rings/diamond-ring.jpg">
+                            <?php if (!empty($edit_product['image']) && $edit_product['image'] !== 'default.jpg'): ?>
+                                <br><small>Current image: <?= htmlspecialchars($edit_product['image']) ?></small>
+                            <?php endif; ?>
+                            </div>
                             <div class="form-group">
                                 <label for="category_id">Category</label>
                                 <select name="category_id" required>
@@ -273,14 +574,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="table-container">
                         <h2>Existing Products</h2>
                         <table>
-                            <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>ID</th><th>Name</th><th>Image</th><th>Price</th><th>Category</th><th>Actions</th></tr></thead>
                             <tbody>
                                 <?php
-                                $products_result = mysqli_query($conn, "SELECT p.id, p.name, p.price, c.name AS category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id DESC");
+                                $products_result = mysqli_query($conn, "SELECT p.id, p.name, p.image, p.price, c.name AS category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id DESC");
                                 while ($product = mysqli_fetch_assoc($products_result)): ?>
                                 <tr>
                                     <td><?= (int)$product['id'] ?></td>
                                     <td><?= htmlspecialchars($product['name']) ?></td>
+                                    <td><?= !empty($product['image']) && $product['image'] !== 'default.jpg' ? htmlspecialchars($product['image']) : '<em>None</em>' ?></td>
                                     <td>₹<?= htmlspecialchars(number_format($product['price'] * 83, 2)) ?></td>
                                     <td><?= htmlspecialchars($product['category_name'] ?? 'N/A') ?></td>
                                     <td class="actions">
@@ -418,7 +720,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </form>
                         </div>
                         <table>
-                            <thead><tr><th>User</th><th>Product</th><th>Quantity</th><th>Added At</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>User</th><th>Product</th><th>Quantity</th><th>Added At</th></tr></thead>
                             <tbody>
                                 <?php
                                 $query = "SELECT c.*, u.name AS user_name, p.name AS product_name FROM cart c JOIN users u ON c.user_id = u.id JOIN products p ON c.product_id = p.id";
@@ -435,17 +737,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <td><?= htmlspecialchars($cart_item['product_name']) ?></td>
                                         <td><?= (int)$cart_item['quantity'] ?></td>
                                         <td><?= date('M j, Y, g:i A', strtotime($cart_item['added_at'])) ?></td>
-                                        <td class="actions">
-                                            <form action="admin_dashboard.php?page=carts<?= $user_id_filter ? "&user_id=$user_id_filter" : "" ?>" method="POST" onsubmit="return confirm('Remove this item from cart?');" style="display:inline;">
-                                                <input type="hidden" name="action" value="remove_cart_item">
-                                                <input type="hidden" name="cart_id" value="<?= (int)$cart_item['id'] ?>">
-                                                <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-                                            </form>
-                                        </td>
                                     </tr>
                                     <?php endwhile;
                                 } else {
-                                    echo '<tr><td colspan="5">No items in carts.</td></tr>';
+                                    echo '<tr><td colspan="4">No items in carts.</td></tr>';
                                 } ?>
                             </tbody>
                         </table>
@@ -484,7 +779,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </form>
                         </div>
                         <table>
-                            <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Address</th><th>Date</th></tr></thead>
+                            <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Address</th><th>Date</th><th>Actions</th></tr></thead>
                             <tbody>
                                 <?php
                                 $query = "SELECT o.*, u.name AS user_name FROM orders o JOIN users u ON o.user_id = u.id";
@@ -503,9 +798,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <td><?= htmlspecialchars($order['payment_method']) ?></td>
                                         <td style="white-space:normal;"><?= htmlspecialchars($order['delivery_address']) ?></td>
                                         <td><?= date('M j, Y, g:i A', strtotime($order['order_date'])) ?></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn btn-sm approve-btn" data-order-id="<?= (int)$order['id'] ?>">Approve</button>
+                                            <form action="admin_dashboard.php?page=orders<?= $user_id_filter ? "&user_id=$user_id_filter" : "" ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');" style="display:inline;">
+                                                <input type="hidden" name="action" value="delete_order">
+                                                <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                            </form>
+                                        </td>
                                     </tr>
                                     <tr class="order-items-row">
-                                        <td colspan="6">
+                                        <td colspan="7">
                                             <div class="order-items-container">
                                                 <h4>Items in Order #<?= (int)$order['id'] ?>:</h4>
                                                 <ul>
@@ -523,7 +826,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </tr>
                                     <?php endwhile;
                                 } else {
-                                    echo '<tr><td colspan="6">No orders found.</td></tr>';
+                                    echo '<tr><td colspan="7">No orders found.</td></tr>';
                                 } ?>
                             </tbody>
                         </table>
@@ -588,5 +891,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ?>
     </main>
 </div>
+<script>
+        console.log('Admin dashboard script loaded');
+        
+        // Mock approval functionality - frontend only
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all approve buttons
+            const approveButtons = document.querySelectorAll('.approve-btn');
+            approveButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.getAttribute('data-order-id');
+                    showApproveNotification(orderId, this);
+                });
+            });
+        });
+        
+        // Professional approval notification - Small green popup on top right
+        function showApproveNotification(orderId, buttonElement) {
+            // Hide the approve button
+            buttonElement.style.display = 'none';
+            
+            // Remove any existing notifications
+            const existing = document.querySelector('.approval-notification');
+            if (existing) {
+                existing.remove();
+            }
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'approval-notification';
+            notification.innerHTML = `
+                <span class="checkmark">✓</span>
+                <span>Order #${orderId} approved successfully!</span>
+                <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            
+            // Add to document
+            document.body.appendChild(notification);
+            
+            // Show with animation
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+    </script>
 </body>
 </html>

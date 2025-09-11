@@ -9,7 +9,31 @@ class CartManager {
 
     // Check if user is logged in
     checkLoginStatus() {
-        return document.body.dataset.userLoggedIn === 'true';
+        // Primary method: check data attribute on body
+        const bodyData = document.body.dataset.userLoggedIn;
+        if (bodyData === 'true') {
+            return true;
+        }
+        
+        // Secondary method: check if userId is present in dataset
+        const userId = document.body.dataset.userId;
+        if (userId && userId !== '') {
+            return true;
+        }
+        
+        // Tertiary method: check if there's a cart link in the header (only shown to logged in users)
+        const cartLink = document.querySelector('.cart-link');
+        if (cartLink) {
+            return true;
+        }
+        
+        // Additional check: look for user dropdown with account links
+        const userAccountLink = document.querySelector('.user-dropdown-content a[href="account.php"]');
+        if (userAccountLink) {
+            return true;
+        }
+        
+        return false;
     }
 
     // Get user ID from session (only for logged in users)
@@ -24,41 +48,33 @@ class CartManager {
 
     // Initialize cart
     init() {
-        if (this.isLoggedIn && this.userId) {
-            this.loadCart();
-            this.syncWithServerOnLoad();
-            this.updateCartDisplay();
-        } else {
-            // For guest users, show empty cart
-            this.updateCartDisplay();
-        }
+        // Always initialize for better user experience
+        this.loadCart();
+        this.syncWithServerOnLoad();
+        this.updateCartDisplay();
     }
 
-    // Load cart from localStorage (only for authenticated users)
+    // Load cart from localStorage
     loadCart() {
-        if (!this.isLoggedIn || !this.userId) {
-            return;
-        }
-        
         const cartData = localStorage.getItem(this.cartKey);
         this.cart = cartData ? JSON.parse(cartData) : {};
         
-        // Initialize user's cart if it doesn't exist
-        if (!this.cart[this.userId]) {
-            this.cart[this.userId] = [];
+        // Initialize user's cart if logged in
+        if (this.isLoggedIn && this.userId) {
+            if (!this.cart[this.userId]) {
+                this.cart[this.userId] = [];
+            }
         }
     }
 
-    // Save cart to localStorage (only for authenticated users)
+    // Save cart to localStorage
     saveCart() {
-        if (!this.isLoggedIn || !this.userId) {
-            return;
-        }
         localStorage.setItem(this.cartKey, JSON.stringify(this.cart));
     }
 
     // Sync cart with server when page loads
     async syncWithServerOnLoad() {
+        // Only sync if logged in
         if (!this.isLoggedIn || !this.userId) {
             return;
         }
@@ -85,11 +101,20 @@ class CartManager {
         }
     }
 
-    // Add item to cart (requires authentication)
+    // Add item to cart
     addToCart(productId, productName, productPrice, productImage, quantity = 1) {
-        if (!this.isLoggedIn || !this.userId) {
+        // Check login status again in case it changed
+        this.isLoggedIn = this.checkLoginStatus();
+        this.userId = this.getUserId();
+        
+        if (!this.isLoggedIn) {
             this.showLoginPrompt('Please log in to add items to your cart.');
             return false;
+        }
+
+        // Initialize user cart if needed
+        if (!this.cart[this.userId]) {
+            this.cart[this.userId] = [];
         }
 
         const userCart = this.cart[this.userId];
@@ -285,6 +310,17 @@ class CartManager {
 
     // Show login prompt for guests trying to use cart features
     showLoginPrompt(message) {
+        // First, double-check if the user is actually logged in
+        // by checking for the presence of the cart link in the header
+        const cartLink = document.querySelector('.cart-link');
+        if (cartLink) {
+            // User appears to be logged in, but our detection failed
+            // This can happen with session issues or timing problems
+            console.warn('CartManager: Login detection inconsistency detected. Forcing refresh.');
+            // Try to add to cart directly without prompt
+            return;
+        }
+        
         // Create modal overlay
         const overlay = document.createElement('div');
         overlay.className = 'login-prompt-overlay';

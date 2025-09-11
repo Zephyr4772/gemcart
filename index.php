@@ -202,10 +202,11 @@ $carousel_data = [
         </section>
         <style>
         .featured-categories-section {
-            padding: 4rem 1rem;
+            padding: 0 1rem;
             background: linear-gradient(135deg, #fff9f0 0%, #f8f4f0 100%);
             position: relative;
             overflow: hidden;
+            margin-top: 0;
         }
         .featured-categories-section::before {
             content: "";
@@ -227,7 +228,7 @@ $carousel_data = [
             font-family: 'Playfair Display', serif;
             font-size: 2.5rem;
             color: #003152;
-            margin-bottom: 3rem;
+            margin-bottom: 0;
             position: relative;
         }
         .section-title:after {
@@ -242,6 +243,7 @@ $carousel_data = [
             gap: 2.5rem;
             justify-content: center;
             flex-wrap: wrap;
+            margin-top: 0;
         }
         .jewelry-collection-card {
             background: #fff;
@@ -258,6 +260,7 @@ $carousel_data = [
             border: 3px solid #f0f0f0;
             position: relative;
             transform-style: preserve-3d;
+            margin-top: 0;
         }
         .jewelry-collection-card:hover {
             transform: translateY(-15px) scale(1.03);
@@ -302,7 +305,7 @@ $carousel_data = [
             font-weight: 700;
             color: #003152;
             letter-spacing: 1px;
-            margin: 1.8rem 0;
+            margin: 0;
             text-align: center;
             position: relative;
             z-index: 2;
@@ -384,7 +387,7 @@ $carousel_data = [
         
         /* Category Carousel Styles */
         .home-categories-carousel-section {
-            padding: 4rem 1rem;
+            padding: 0 1rem;
             background: linear-gradient(135deg, #f9f3f0 0%, #f0f0f8 100%);
             position: relative;
         }
